@@ -1,0 +1,43 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      webapp_url:
+        description: "Google Apps Script Web App URL"
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug -PWEBAPP_URL="${{ github.event.inputs.webapp_url || vars.WEBAPP_URL || 'https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec' }}"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-bensin-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
